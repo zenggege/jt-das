@@ -42,17 +42,17 @@ class Analysis extends Admin_Controller
     	$id = intval($this->get('id',true));#商铺ID
     	$month1 = trim($this->get('month1',true));#第一个月
     	$month2 = trim($this->get('month2',true));#第二个月 
-        die();
+
     	$data = $this->v1_analysis->get_single_details($id,$month1,$month2);
     	$this->respond(['status'=>true,
     				    'tips'=>'数据获取成功',
     				    'data'=>$data['data'],
                         'month'=>$data['month'],
-    				    // 'subtotal'=>$data['subtotal'],
-    				    // 'average'=>$data['average'],
-    				    // 'working_day'=>$data['working_day'],
-    				    // 'rest_day'=>$data['rest_day'],
-    				    // 'maximum_sales'=>$data['maximum_sales'],
+    				    'subtotal'=>$data['subtotal'],
+    				    'average'=>$data['average'],
+    				    'working_day'=>$data['working_day'],
+    				    'rest_day'=>$data['rest_day'],
+    				    'maximum_sales'=>$data['maximum_sales'],
     				    ],HTTP_OK);
     }
 

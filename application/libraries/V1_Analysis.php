@@ -149,76 +149,77 @@ class V1_Analysis  {
     function get_single_details($id,$month1,$month2){#单个商家明细
 		$month1 = is_month($month1)?$month1:date('Y-m',strtotime("-1 month"));
 		$month2 = is_month($month2)?$month2:date('Y-m');
-		// echo $month1;
-		// echo "\r\n";
-		// echo $month2;
-		// die();
-
-		$data = NULL;
+		$data = $datalist = NULL;
 		$datainfo  = $this->CI->Shop_model->one(array('shopid'=>$id));
 		for ($i=1; $i<=31; $i++) {
 			$_date = ($i < 10)?$month1.'-0'.$i:$month1.'-'.$i;
 			$sql = "`created` = '".$_date."' AND shopid = {$datainfo['shopid']}"; 
 			$total = $this->CI->Shop_trade_model->sum('subtotal2',$sql);
-			// echo $this->CI->Shop_trade_model->last_query();
-			// echo "\r\n";
-			// die();
+
 
 			$_date2 = ($i < 10)?$month2.'-0'.$i:$month2.'-'.$i;
 			$sql2 = "`created` = '".$_date2."' AND shopid = {$datainfo['shopid']}"; 
 			$total2 = $this->CI->Shop_trade_model->sum('subtotal2',$sql2);
-			// echo $this->CI->Shop_trade_model->last_query();
-			// die();
+
 			$_data['date'] = ($i < 10)?'0'.$i:$i;
 			$_data['arr'][] = $total;
 			$_data['arr'][] = $total2;
 			$data[] = $_data;
 			unset($_data);
-		}
-		// print_r($data);
-		// die();
-		
 
-		// $this->CI->Shop_trade_model->page_size = PHP_INT_MAX;
-		// $dataList = $this->CI->Shop_trade_model->select(array('shopid'=>$datainfo['shopid'],'created >='=>$startDate,'created <='=>$endDate),'shopid,created,subtotal,subtotal2','created desc');
-		// // echo $this->CI->Shop_trade_model->last_query();
-		// // die();
-		// $n= 1;
-		// $subtotal =0;
-		// $onetofive=0;
-		// $sub_onetofive=0;
+			$this->CI->Shop_trade_model->page_size = PHP_INT_MAX;
+			$_datalist1 = $this->CI->Shop_trade_model->select($sql,'shopid,created,subtotal,subtotal2','created desc');
+
+			$this->CI->Shop_trade_model->page_size = PHP_INT_MAX;
+			$_datalist2 = $this->CI->Shop_trade_model->select($sql2,'shopid,created,subtotal,subtotal2','created desc');
+
+			if($_datalist1) $datalist[] = $_datalist1;
+			if($_datalist2) $datalist[] = $_datalist2;
+
+		}
+
+		$n= 1;
+		$subtotal =0;
+		$onetofive=0;
+		$sub_onetofive=0;
 		  
-		// $sixtoseven=0;
-		// $sub_sixtoseven=0;
-		// $max_total=0;
-		// foreach($dataList as $v){
-		// 	$precentage = $v['subtotal2']>0?((abs($v['subtotal']-$v['subtotal2'])/max($v['subtotal2'],$v['subtotal']))*100):0;
-		// 	$n += 1;
-		// 	$max_total= max($max_total,$v['subtotal2']);
-		// 	// echo $max_total;
-		// 	// die();
-		// 	$subtotal += $v['subtotal2'];
-			
-		// 	if(is_work_day($v['created']))
-		// 	{
-		// 		 $sub_onetofive += $v['subtotal2'];
-		// 		 $onetofive++;
-		// 	}else
-		// 	{
-		// 		 $sub_sixtoseven += $v['subtotal2'];
-		// 		 $sixtoseven++;
-		// 	}
-		// }
-		// $arr = ['subtotal'=>number_format($subtotal, 2, '.', ','),#区间合计
-				// 'average'=>number_format(($subtotal/($n-1)), 2, '.', ','),#区间日均
-				// 'working_day'=>$onetofive?number_format(($sub_onetofive/$onetofive), 2, '.', ','):0,#区间工作日均
-				// 'rest_day'=>$sixtoseven?number_format(($sub_sixtoseven/$sixtoseven), 2, '.', ','):0,#区间休息日均
-				// 'maximum_sales'=>number_format($max_total, 2, '.', ','),#最高销售额
-				// 'data'=>$data
-			   // ];
-		$arr = ['data'=>$data,
+		$sixtoseven=0;
+		$sub_sixtoseven=0;
+		$max_total=0;		
+		if($datalist){
+			foreach ($datalist as $key => $value) {
+				foreach($value as $v){
+					$precentage = $v['subtotal2']>0?((abs($v['subtotal']-$v['subtotal2'])/max($v['subtotal2'],$v['subtotal']))*100):0;
+					$n += 1;
+					$max_total= max($max_total,$v['subtotal2']);
+					// echo $max_total;
+					// die();
+					$subtotal += $v['subtotal2'];
+					
+					if(is_work_day($v['created']))
+					{
+						 $sub_onetofive += $v['subtotal2'];
+						 $onetofive++;
+					}else
+					{
+						 $sub_sixtoseven += $v['subtotal2'];
+						 $sixtoseven++;
+					}
+				}				
+			}
+		}
+
+
+		$arr = ['subtotal'=>number_format($subtotal, 2, '.', ','),#区间合计
+				'average'=>number_format(($subtotal/($n-1)), 2, '.', ','),#区间日均
+				'working_day'=>$onetofive?number_format(($sub_onetofive/$onetofive), 2, '.', ','):0,#区间工作日均
+				'rest_day'=>$sixtoseven?number_format(($sub_sixtoseven/$sixtoseven), 2, '.', ','):0,#区间休息日均
+				'maximum_sales'=>number_format($max_total, 2, '.', ','),#最高销售额
+				'data'=>$data,
+				'data'=>$data,
 				'month'=>[$month1,$month2]
 			   ];
+		
 		return $arr;
     }
 
